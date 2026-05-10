@@ -1,56 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=800, height=480, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta http-equiv="refresh" content="3600" />
-  <title>Tamil Calendar - reTerminal E1002</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800, height=480">
+<meta http-equiv="refresh" content="3600">
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    width: 800px;
+    height: 480px;
+    background: white;
+}
+
+.wrapper {
+    width: 800px;
+    height: 480px;
+    overflow: hidden;
+    position: relative;
+}
+
+iframe {
+    width: 1400px;
+    height: 2200px;
+    border: none;
+
+    transform: scale(0.57);
+    transform-origin: top left;
+
+    position: absolute;
+    top: -120px;
+    left: -180px;
+}
+</style>
 </head>
+
 <body>
-  <main class="calendar">
-    <section class="left-panel">
-      <div class="label">Today</div>
-      <div id="englishDate" class="english-date">Loading...</div>
-      <div id="dayName" class="day-name">...</div>
-
-      <div class="divider"></div>
-
-      <div class="label">தமிழ் மாதம்</div>
-      <div id="tamilMonth" class="tamil-month">...</div>
-      <div id="tamilSeason" class="subtext">...</div>
-    </section>
-
-    <section class="right-panel">
-      <div class="top-row">
-        <div>
-          <div class="label">தமிழ் நாள்</div>
-          <div id="tamilDay" class="big-number">...</div>
-        </div>
-        <div class="time-box">
-          <div class="label">Updated</div>
-          <div id="timeNow">--:--</div>
-        </div>
-      </div>
-
-      <div class="info-grid">
-        <div class="info-card">
-          <div class="label">நல்ல நேரம்</div>
-          <div id="nallaNeram">06:00 - 07:30</div>
-        </div>
-        <div class="info-card">
-          <div class="label">ராகு காலம்</div>
-          <div id="rahuKalam">Check locally</div>
-        </div>
-        <div class="info-card wide">
-          <div class="label">குறிப்பு</div>
-          <div id="note">Tamil calendar values are approximate. Update data.js for exact panchangam.</div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <script src="data.js"></script>
-  <script src="script.js"></script>
+<div class="wrapper">
+<iframe src="https://www.tamildailycalendar.com/tamil_daily_calendar.php"></iframe>
+</div>
 </body>
 </html>
