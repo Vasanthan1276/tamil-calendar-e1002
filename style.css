@@ -65,7 +65,7 @@ html, body {
 }
 
 .tamil-month {
-  font-size: 48px;
+  font-size: 32px;
   font-weight: 900;
   margin-top: 8px;
 }
@@ -82,7 +82,7 @@ html, body {
 }
 
 .big-number {
-  font-size: 130px;
+  font-size: 90px;
   line-height: 0.9;
   font-weight: 900;
 }
