@@ -26,20 +26,55 @@ iframe {
     width: 1200px;
     height: 1600px;
     border: none;
-
     transform: scale(0.75);
     transform-origin: top left;
-
     position: absolute;
     top: -320px;
     left: -160px;
+}
+
+.controls {
+    position: fixed;
+    top: 5px;
+    left: 5px;
+    background: white;
+    border: 1px solid black;
+    padding: 6px;
+    font-family: Arial;
+    font-size: 12px;
+    z-index: 9999;
 }
 </style>
 </head>
 
 <body>
 <div class="wrapper">
-<iframe src="https://www.tamildailycalendar.com/tamil_daily_calendar.php"></iframe>
+    <iframe src="https://www.tamildailycalendar.com/tamil_daily_calendar.php"></iframe>
 </div>
+
+<div class="controls">
+    Scale <input type="range" min="0.40" max="1.30" step="0.01" value="0.75" id="s"><br>
+    Top <input type="range" min="-600" max="100" step="5" value="-320" id="t"><br>
+    Left <input type="range" min="-600" max="100" step="5" value="-160" id="l"><br>
+    <div id="values"></div>
+</div>
+
+<script>
+const iframe = document.querySelector("iframe");
+const s = document.getElementById("s");
+const t = document.getElementById("t");
+const l = document.getElementById("l");
+const values = document.getElementById("values");
+
+function tune() {
+    iframe.style.transform = `scale(${s.value})`;
+    iframe.style.top = `${t.value}px`;
+    iframe.style.left = `${l.value}px`;
+    values.innerHTML = `scale(${s.value})<br>top: ${t.value}px<br>left: ${l.value}px`;
+}
+
+[s, t, l].forEach(control => control.addEventListener("input", tune));
+tune();
+</script>
 </body>
 </html>
