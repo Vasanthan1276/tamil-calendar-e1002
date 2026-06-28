@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 const URL = "https://www.tamildailycalendar.com/tamil_daily_calendar.php";
 
 const replacements = {
+  "சித்திரை": "Chithirai",
+  "வைகாசி": "Vaikasi",
   "ஆனி": "Aani",
   "ஆடி": "Aadi",
   "ஆவணி": "Aavani",
@@ -13,8 +15,6 @@ const replacements = {
   "தை": "Thai",
   "மாசி": "Maasi",
   "பங்குனி": "Panguni",
-  "சித்திரை": "Chithirai",
-  "வைகாசி": "Vaikasi",
 
   "பராபவ": "Parabhava",
 
@@ -24,9 +24,7 @@ const replacements = {
   "தெற்கு": "South",
 
   "வெல்லம்": "Jaggery",
-
   "சம நோக்கு நாள்": "Balanced Day",
-
   "மிதுன லக்னம்": "Gemini Ascendant",
   "இருப்பு நாழிகை": "Balance",
   "வினாடி": "seconds",
@@ -45,6 +43,7 @@ const replacements = {
   "இன்று அதிகாலை": "Until",
   "வரை": "",
   "பின்பு": "then",
+
   "கா / AM": "AM",
   "மா / PM": "PM",
   "கா": "AM",
@@ -53,7 +52,8 @@ const replacements = {
 
 function clean(value = "") {
   return value
-    .replace(/&nbsp;/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -65,79 +65,102 @@ function translate(value = "") {
     result = result.split(tamil).join(english);
   }
 
-  return clean(result);
+  // Remove remaining Tamil-only labels such as weekday headings.
+  result = result.replace(/[\u0B80-\u0BFF]+/g, " ");
+  result = clean(result);
+
+  // Improve time formatting slightly.
+  result = result.replace(/(\d{2})\.(\d{2})/g, "$1:$2");
+  result = result.replace(/\s*-\s*/g, " – ");
+
+  return result || "Not available";
 }
 
-function escapeRegex(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function htmlToLines(html) {
+  const text = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<(br|\/p|\/div|\/tr|\/td|\/th|\/h[1-6])[^>]*>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&");
+
+  return text
+    .split("\n")
+    .map(clean)
+    .filter(Boolean);
 }
 
-function getValue(text, label, nextLabel = "") {
-  const start = escapeRegex(label);
-  const end = nextLabel
-    ? `(?=${escapeRegex(nextLabel)})`
-    : "(?=Tamil Rasi Palan|$)";
+function getValue(section, label, nextLabel) {
+  const start = section.indexOf(label);
 
-  const pattern = new RegExp(`${start}\\s*([\\s\\S]*?)${end}`, "i");
-  const match = text.match(pattern);
+  if (start === -1) {
+    return "Not available";
+  }
 
-  if (!match) return "Not available";
+  const afterStart = section.slice(start + label.length);
+  const end = nextLabel ? afterStart.indexOf(nextLabel) : -1;
 
-  return clean(match[1]);
-}
+  const raw = end >= 0 ? afterStart.slice(0, end) : afterStart;
 
-function removeTamilDuplicates(value) {
-  return value
-    .replace(/[^\x00-\x7F]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return translate(raw);
 }
 
 async function main() {
   const response = await fetch(URL, {
     headers: {
-      "user-agent": "Mozilla/5.0 GitHub Calendar Updater"
+      "user-agent": "Mozilla/5.0 GitHub Tamil Calendar Updater"
     }
   });
 
   if (!response.ok) {
-    throw new Error(`Calendar site returned ${response.status}`);
+    throw new Error(`Calendar website returned HTTP ${response.status}`);
   }
 
   const html = await response.text();
+  const lines = htmlToLines(html);
 
-  const text = clean(
-    html
-      .replace(/<script[\s\S]*?<\/script>/gi, " ")
-      .replace(/<style[\s\S]*?<\/style>/gi, " ")
-      .replace(/<[^>]+>/g, " ")
+  // Locate only today's daily-calendar section.
+  const dateIndex = lines.findIndex(line =>
+    /^\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}/i.test(line)
   );
 
-  const data = {
-    date: getValue(text, "####", "தேதி"),
-    tamil_date: getValue(text, "Date", "ஞாயிறு"),
-    nalla_neram: getValue(text, "Nalla Neram", "கௌரி நல்ல நேரம்"),
-    gowri_nalla_neram: getValue(text, "Gowri Nalla Neram", "இராகு காலம்"),
-    rahu_kaalam: getValue(text, "Raahu Kaalam", "எமகண்டம்"),
-    yamagandam: getValue(text, "Yemagandam", "குளிகை"),
-    kuligai: getValue(text, "Kuligai", "சூலம்"),
-    soolam: getValue(text, "Soolam", "பரிகாரம்"),
-    parigaram: getValue(text, "Parigaram", "சந்திராஷ்டமம்"),
-    chandrashtamam: getValue(text, "Chandirashtamam", "நாள்"),
-    lagnam: getValue(text, "Lagnam", "சூரிய உதயம்"),
-    sunrise: getValue(text, "Sun Rise", "ஸ்ரார்த திதி"),
-    thithi: getValue(text, "Thithi", "நட்சத்திரம்"),
-    star: getValue(text, "Star", "சுபகாரியம்"),
-    subakariyam: getValue(text, "Subakariyam", "Tamil Rasi Palan")
-  };
-
-  for (const key of Object.keys(data)) {
-    data[key] = translate(removeTamilDuplicates(data[key]));
+  if (dateIndex === -1) {
+    throw new Error("Could not locate today's calendar date.");
   }
 
-  data.updated_at = new Date().toISOString();
+  const endIndex = lines.findIndex(
+    (line, index) => index > dateIndex && line.includes("Tamil Rasi Palan")
+  );
+
+  const dailyLines = lines.slice(
+    dateIndex,
+    endIndex === -1 ? dateIndex + 60 : endIndex
+  );
+
+  const section = dailyLines.join("\n");
+
+  const data = {
+    date: dailyLines[0] || "Not available",
+    tamil_date: getValue(section, "Date", "Nalla Neram"),
+    nalla_neram: getValue(section, "Nalla Neram", "Gowri Nalla Neram"),
+    gowri_nalla_neram: getValue(section, "Gowri Nalla Neram", "Raahu Kaalam"),
+    rahu_kaalam: getValue(section, "Raahu Kaalam", "Yemagandam"),
+    yamagandam: getValue(section, "Yemagandam", "Kuligai"),
+    kuligai: getValue(section, "Kuligai", "Soolam"),
+    soolam: getValue(section, "Soolam", "Parigaram"),
+    parigaram: getValue(section, "Parigaram", "Chandirashtamam"),
+    chandrashtamam: getValue(section, "Chandirashtamam", "Naal"),
+    lagnam: getValue(section, "Lagnam", "Sun Rise"),
+    sunrise: getValue(section, "Sun Rise", "Sraardha Thithi"),
+    thithi: getValue(section, "Thithi", "Star"),
+    star: getValue(section, "Star", "Subakariyam"),
+    subakariyam: getValue(section, "Subakariyam", "Tamil Rasi Palan"),
+    updated_at: new Date().toISOString()
+  };
 
   await fs.mkdir("data", { recursive: true });
+
   await fs.writeFile(
     "data/calendar.json",
     JSON.stringify(data, null, 2) + "\n",
@@ -147,7 +170,7 @@ async function main() {
   console.log(JSON.stringify(data, null, 2));
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error(error);
   process.exit(1);
 });
