@@ -4,46 +4,251 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=800, height=480">
 <meta http-equiv="refresh" content="3600">
-
 <title>English Tamil Calendar</title>
 
 <style>
 html, body {
     margin: 0;
-    padding: 0;
-    overflow: hidden;
-    width: 800px;
-    height: 480px;
-    background: white;
-}
-
-.wrapper {
     width: 800px;
     height: 480px;
     overflow: hidden;
-    position: relative;
+    background: #f7f4ea;
+    color: #111;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
-iframe {
-    width: 1400px;
-    height: 2200px;
-    border: none;
+* {
+    box-sizing: border-box;
+}
 
-    transform: scale(0.73);
-    transform-origin: top left;
+.page {
+    width: 800px;
+    height: 480px;
+    padding: 20px 24px;
+}
 
-    position: absolute;
-    top: -175px;
-    left: -75px;
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 3px solid #222;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.date {
+    font-size: 19px;
+    font-weight: 600;
+    text-align: right;
+}
+
+.tamil-date {
+    margin-top: 3px;
+    font-size: 15px;
+    color: #444;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 18px;
+}
+
+.card {
+    border: 1.5px solid #222;
+    border-radius: 8px;
+    padding: 10px 12px;
+    min-height: 62px;
+    background: #fffdf6;
+}
+
+.label {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 5px;
+}
+
+.value {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.small {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.footer {
+    margin-top: 12px;
+    border-top: 1px solid #777;
+    padding-top: 8px;
+    font-size: 13px;
+    color: #444;
 }
 </style>
 </head>
 
 <body>
-<div class="wrapper">
-    <iframe
-        src="https://www-tamildailycalendar-com.translate.goog/tamil_daily_calendar.php?_x_tr_sl=ta&_x_tr_tl=en&_x_tr_hl=en&_x_tr_pto=wapp">
-    </iframe>
+<div class="page">
+    <div class="header">
+        <div>
+            <div class="title">Tamil Daily Calendar</div>
+            <div class="tamil-date">English reference display</div>
+        </div>
+
+        <div class="date">
+            <div id="gregorianDate">Loading...</div>
+            <div class="tamil-date" id="tamilDate">Tamil date</div>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <div class="label">Nalla Neram</div>
+            <div class="value" id="nallaNeram">—</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Gowri Nalla Neram</div>
+            <div class="value" id="gowriNeram">—</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Rahu Kaalam</div>
+            <div class="value" id="rahuKaalam">—</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Yamagandam</div>
+            <div class="value" id="yamagandam">—</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Kuligai</div>
+            <div class="value" id="kuligai">—</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Sunrise</div>
+            <div class="value" id="sunrise">Singapore time</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Tithi</div>
+            <div class="value small" id="tithi">Not loaded</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Nakshatra / Star</div>
+            <div class="value small" id="nakshatra">Not loaded</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Times shown in Singapore time. This is an English-friendly Tamil calendar display.
+    </div>
 </div>
+
+<script>
+const singaporeNow = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })
+);
+
+const day = singaporeNow.getDay();
+
+const weekdayNames = [
+    "Sunday", "Monday", "Tuesday", "Wednesday",
+    "Thursday", "Friday", "Saturday"
+];
+
+const monthNames = [
+    "January", "February", "March", "April",
+    "May", "June", "July", "August",
+    "September", "October", "November", "December"
+];
+
+document.getElementById("gregorianDate").textContent =
+    `${singaporeNow.getDate()} ${monthNames[singaporeNow.getMonth()]} ${singaporeNow.getFullYear()} · ${weekdayNames[day]}`;
+
+const dailyTimes = {
+    0: {
+        nalla: "8:15 – 9:00 AM / 3:15 – 4:15 PM",
+        gowri: "10:45 – 11:45 AM / 1:30 – 2:30 PM",
+        rahu: "4:30 – 6:00 PM",
+        yama: "12:00 – 1:30 PM",
+        kuligai: "3:00 – 4:30 PM"
+    },
+    1: {
+        nalla: "6:00 – 7:00 AM / 1:00 – 2:00 PM",
+        gowri: "9:00 – 10:00 AM / 7:30 – 8:30 PM",
+        rahu: "7:30 – 9:00 AM",
+        yama: "10:30 AM – 12:00 PM",
+        kuligai: "1:30 – 3:00 PM"
+    },
+    2: {
+        nalla: "10:30 – 11:30 AM / 3:00 – 4:00 PM",
+        gowri: "7:30 – 8:30 AM / 6:30 – 7:30 PM",
+        rahu: "3:00 – 4:30 PM",
+        yama: "9:00 – 10:30 AM",
+        kuligai: "12:00 – 1:30 PM"
+    },
+    3: {
+        nalla: "9:00 – 10:00 AM / 1:00 – 2:00 PM",
+        gowri: "6:30 – 7:30 AM / 5:30 – 6:30 PM",
+        rahu: "12:00 – 1:30 PM",
+        yama: "7:30 – 9:00 AM",
+        kuligai: "10:30 AM – 12:00 PM"
+    },
+    4: {
+        nalla: "10:30 – 11:30 AM / 3:00 – 4:00 PM",
+        gowri: "6:00 – 7:00 AM / 4:30 – 5:30 PM",
+        rahu: "1:30 – 3:00 PM",
+        yama: "6:00 – 7:30 AM",
+        kuligai: "9:00 – 10:30 AM"
+    },
+    5: {
+        nalla: "6:30 – 7:30 AM / 12:30 – 1:30 PM",
+        gowri: "7:30 – 8:30 AM / 3:30 – 4:30 PM",
+        rahu: "10:30 AM – 12:00 PM",
+        yama: "3:00 – 4:30 PM",
+        kuligai: "7:30 – 9:00 AM"
+    },
+    6: {
+        nalla: "7:30 – 8:30 AM / 4:30 – 5:30 PM",
+        gowri: "6:30 – 7:30 AM / 2:30 – 3:30 PM",
+        rahu: "9:00 – 10:30 AM",
+        yama: "1:30 – 3:00 PM",
+        kuligai: "6:00 – 7:30 AM"
+    }
+};
+
+const info = dailyTimes[day];
+
+document.getElementById("nallaNeram").textContent = info.nalla;
+document.getElementById("gowriNeram").textContent = info.gowri;
+document.getElementById("rahuKaalam").textContent = info.rahu;
+document.getElementById("yamagandam").textContent = info.yama;
+document.getElementById("kuligai").textContent = info.kuligai;
+
+document.getElementById("sunrise").textContent =
+    "Approx. 7:00 AM";
+
+document.getElementById("tamilDate").textContent =
+    "Tamil date and Panchang details";
+
+document.getElementById("tithi").textContent =
+    "Use Tamil calendar source for daily lunar details";
+
+document.getElementById("nakshatra").textContent =
+    "Use Tamil calendar source for daily star details";
+</script>
 </body>
 </html>
