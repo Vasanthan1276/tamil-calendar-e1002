@@ -60,10 +60,8 @@ function translate(value = "") {
     result = result.split(tamil).join(english);
   }
 
-  // Remove Tamil script left beside English translations.
   result = result.replace(/[\u0B80-\u0BFF]+/g, " ");
 
-  // Remove Roman-Tamil duplicates from the source.
   result = result
     .replace(/\bMerkku\b/gi, "")
     .replace(/\bMerku\b/gi, "")
@@ -76,7 +74,6 @@ function translate(value = "") {
     .replace(/\bSooriy[a-z]*\b/gi, "")
     .replace(/\bUdhayam\b/gi, "");
 
-  // Improve time and separator formatting.
   result = result
     .replace(/(\d{2})\.(\d{2})/g, "$1:$2")
     .replace(/\s*-\s*/g, " – ")
@@ -135,6 +132,30 @@ function addTimeSeparator(value) {
   return value.replace(/(AM|PM)\s+(\d{2}:\d{2})/g, "$1 / $2");
 }
 
+/* Adds AM or PM when the Tamil source leaves it out.
+   These three daily periods occur only from morning through evening. */
+function ensureDayPeriod(value) {
+  if (!value || value === "Not available" || /\b(AM|PM)\b/i.test(value)) {
+    return value;
+  }
+
+  const match = value.match(/(\d{1,2}):\d{2}/);
+
+  if (!match) {
+    return value;
+  }
+
+  const hour = Number(match[1]);
+
+  let suffix = "PM";
+
+  if (hour >= 7 && hour <= 11) {
+    suffix = "AM";
+  }
+
+  return `${value} ${suffix}`;
+}
+
 async function main() {
   const response = await fetch(URL, {
     headers: {
@@ -169,15 +190,27 @@ async function main() {
   const data = {
     date: dailyLines[0] || "Not available",
     tamil_date: sectionValue(dailyLines, "Date", "Nalla Neram"),
+
     nalla_neram: addTimeSeparator(
       sectionValue(dailyLines, "Nalla Neram", "Gowri Nalla Neram")
     ),
+
     gowri_nalla_neram: addTimeSeparator(
       sectionValue(dailyLines, "Gowri Nalla Neram", "Raahu Kaalam")
     ),
-    rahu_kaalam: sectionValue(dailyLines, "Raahu Kaalam", "Yemagandam"),
-    yamagandam: sectionValue(dailyLines, "Yemagandam", "Kuligai"),
-    kuligai: sectionValue(dailyLines, "Kuligai", "Soolam"),
+
+    rahu_kaalam: ensureDayPeriod(
+      sectionValue(dailyLines, "Raahu Kaalam", "Yemagandam")
+    ),
+
+    yamagandam: ensureDayPeriod(
+      sectionValue(dailyLines, "Yemagandam", "Kuligai")
+    ),
+
+    kuligai: ensureDayPeriod(
+      sectionValue(dailyLines, "Kuligai", "Soolam")
+    ),
+
     soolam: sectionValue(dailyLines, "Soolam", "Parigaram"),
     parigaram: sectionValue(dailyLines, "Parigaram", "Chandirashtamam"),
     chandrashtamam: sectionValue(dailyLines, "Chandirashtamam", "Naal"),
