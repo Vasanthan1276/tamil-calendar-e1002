@@ -24,8 +24,9 @@ const replacements = {
   "தெற்கு": "South",
 
   "வெல்லம்": "Jaggery",
-  "சம நோக்கு நாள்": "Balanced Day",
-  "மிதுன லக்னம்": "Gemini Ascendant",
+
+  "சம நோக்கு நாள்": "Balanced day",
+  "மிதுன லக்னம்": "Gemini ascendant",
   "இருப்பு நாழிகை": "Balance",
   "வினாடி": "seconds",
 
@@ -65,13 +66,21 @@ function translate(value = "") {
     result = result.split(tamil).join(english);
   }
 
-  // Remove remaining Tamil-only labels such as weekday headings.
-  result = result.replace(/[\u0B80-\u0BFF]+/g, " ");
-  result = clean(result);
+  // Remove duplicate Roman Tamil words left beside translated Tamil text.
+  result = result
+    .replace(/\bMerkku\b/gi, "")
+    .replace(/\bMerku\b/gi, "")
+    .replace(/\bVellam\b/gi, "")
+    .replace(/\bThithi\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
 
-  // Improve time formatting slightly.
-  result = result.replace(/(\d{2})\.(\d{2})/g, "$1:$2");
-  result = result.replace(/\s*-\s*/g, " – ");
+  // Time formatting.
+  result = result
+    .replace(/(\d{2})\.(\d{2})/g, "$1:$2")
+    .replace(/\s*-\s*/g, " – ")
+    .replace(/\bAM AM\b/g, "AM")
+    .replace(/\bPM PM\b/g, "PM");
 
   return result || "Not available";
 }
@@ -91,19 +100,37 @@ function htmlToLines(html) {
     .filter(Boolean);
 }
 
-function getValue(section, label, nextLabel) {
-  const start = section.indexOf(label);
+function sectionValue(lines, label, nextLabel) {
+  const startIndex = lines.findIndex(line => line.startsWith(label));
 
-  if (start === -1) {
+  if (startIndex === -1) {
     return "Not available";
   }
 
-  const afterStart = section.slice(start + label.length);
-  const end = nextLabel ? afterStart.indexOf(nextLabel) : -1;
+  const values = [];
 
-  const raw = end >= 0 ? afterStart.slice(0, end) : afterStart;
+  for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i];
 
-  return translate(raw);
+    if (i > startIndex && line.startsWith(nextLabel)) {
+      break;
+    }
+
+    if (i === startIndex) {
+      values.push(line.slice(label.length).trim());
+    } else {
+      values.push(line);
+    }
+  }
+
+  return translate(values.join(" "));
+}
+
+function addTimeSeparator(value) {
+  return value.replace(
+    /(AM|PM)\s+(\d{2}:\d{2})/g,
+    "$1 / $2"
+  );
 }
 
 async function main() {
@@ -120,7 +147,6 @@ async function main() {
   const html = await response.text();
   const lines = htmlToLines(html);
 
-  // Locate only today's daily-calendar section.
   const dateIndex = lines.findIndex(line =>
     /^\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}/i.test(line)
   );
@@ -130,7 +156,7 @@ async function main() {
   }
 
   const endIndex = lines.findIndex(
-    (line, index) => index > dateIndex && line.includes("Tamil Rasi Palan")
+    (line, index) => index > dateIndex && line.startsWith("Tamil Rasi Palan")
   );
 
   const dailyLines = lines.slice(
@@ -138,24 +164,27 @@ async function main() {
     endIndex === -1 ? dateIndex + 60 : endIndex
   );
 
-  const section = dailyLines.join("\n");
-
   const data = {
     date: dailyLines[0] || "Not available",
-    tamil_date: getValue(section, "Date", "Nalla Neram"),
-    nalla_neram: getValue(section, "Nalla Neram", "Gowri Nalla Neram"),
-    gowri_nalla_neram: getValue(section, "Gowri Nalla Neram", "Raahu Kaalam"),
-    rahu_kaalam: getValue(section, "Raahu Kaalam", "Yemagandam"),
-    yamagandam: getValue(section, "Yemagandam", "Kuligai"),
-    kuligai: getValue(section, "Kuligai", "Soolam"),
-    soolam: getValue(section, "Soolam", "Parigaram"),
-    parigaram: getValue(section, "Parigaram", "Chandirashtamam"),
-    chandrashtamam: getValue(section, "Chandirashtamam", "Naal"),
-    lagnam: getValue(section, "Lagnam", "Sun Rise"),
-    sunrise: getValue(section, "Sun Rise", "Sraardha Thithi"),
-    thithi: getValue(section, "Thithi", "Star"),
-    star: getValue(section, "Star", "Subakariyam"),
-    subakariyam: getValue(section, "Subakariyam", "Tamil Rasi Palan"),
+    tamil_date: sectionValue(dailyLines, "Date", "Nalla Neram"),
+    nalla_neram: addTimeSeparator(
+      sectionValue(dailyLines, "Nalla Neram", "Gowri Nalla Neram")
+    ),
+    gowri_nalla_neram: addTimeSeparator(
+      sectionValue(dailyLines, "Gowri Nalla Neram", "Raahu Kaalam")
+    ),
+    rahu_kaalam: sectionValue(dailyLines, "Raahu Kaalam", "Yemagandam"),
+    yamagandam: sectionValue(dailyLines, "Yemagandam", "Kuligai"),
+    kuligai: sectionValue(dailyLines, "Kuligai", "Soolam"),
+    soolam: sectionValue(dailyLines, "Soolam", "Parigaram"),
+    parigaram: sectionValue(dailyLines, "Parigaram", "Chandirashtamam"),
+    chandrashtamam: sectionValue(dailyLines, "Chandirashtamam", "Naal"),
+    lagnam: sectionValue(dailyLines, "Lagnam", "Sun Rise"),
+    sunrise: sectionValue(dailyLines, "Sun Rise", "Sraardha Thithi"),
+    sraardha_thithi: sectionValue(dailyLines, "Sraardha Thithi", "Thithi"),
+    thithi: sectionValue(dailyLines, "Thithi", "Star"),
+    star: sectionValue(dailyLines, "Star", "Subakariyam"),
+    subakariyam: sectionValue(dailyLines, "Subakariyam", "Tamil Rasi Palan"),
     updated_at: new Date().toISOString()
   };
 
