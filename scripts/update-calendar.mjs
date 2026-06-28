@@ -25,14 +25,8 @@ const replacements = {
 
   "வெல்லம்": "Jaggery",
 
-  "சம நோக்கு நாள்": "Balanced day",
-  "மிதுன லக்னம்": "Gemini ascendant",
-  "இருப்பு நாழிகை": "Balance",
-  "வினாடி": "seconds",
-
   "திரயோதசி": "Trayodashi",
   "சதுர்த்தசி": "Chaturdashi",
-
   "அனுஷம்": "Anusham",
   "கேட்டை": "Kettai",
 
@@ -66,21 +60,31 @@ function translate(value = "") {
     result = result.split(tamil).join(english);
   }
 
-  // Remove duplicate Roman Tamil words left beside translated Tamil text.
+  // Remove remaining Tamil-script text from the source.
+  result = result.replace(/[\u0B80-\u0BFF]+/g, " ");
+
+  // Remove Roman-Tamil duplicates that often appear beside translations.
   result = result
     .replace(/\bMerkku\b/gi, "")
     .replace(/\bMerku\b/gi, "")
     .replace(/\bVellam\b/gi, "")
+    .replace(/\bKizhakku\b/gi, "")
+    .replace(/\bVadakku\b/gi, "")
+    .replace(/\bThenku\b/gi, "")
     .replace(/\bThithi\b/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
+    .replace(/\bNatchathiram\b/gi, "")
+    .replace(/\bSooriy[a-z]*\b/gi, "")
+    .replace(/\bUdhayam\b/gi, "")
+    .replace(/\(\s*\)/g, "");
 
-  // Time formatting.
+  // Correct display formatting.
   result = result
     .replace(/(\d{2})\.(\d{2})/g, "$1:$2")
     .replace(/\s*-\s*/g, " – ")
-    .replace(/\bAM AM\b/g, "AM")
-    .replace(/\bPM PM\b/g, "PM");
+    .replace(/\bAM AM\b/gi, "AM")
+    .replace(/\bPM PM\b/gi, "PM")
+    .replace(/\s+/g, " ")
+    .trim();
 
   return result || "Not available";
 }
@@ -127,10 +131,7 @@ function sectionValue(lines, label, nextLabel) {
 }
 
 function addTimeSeparator(value) {
-  return value.replace(
-    /(AM|PM)\s+(\d{2}:\d{2})/g,
-    "$1 / $2"
-  );
+  return value.replace(/(AM|PM)\s+(\d{2}:\d{2})/g, "$1 / $2");
 }
 
 async function main() {
