@@ -60,10 +60,10 @@ function translate(value = "") {
     result = result.split(tamil).join(english);
   }
 
-  // Remove remaining Tamil-script text from the source.
+  // Remove Tamil script left beside English translations.
   result = result.replace(/[\u0B80-\u0BFF]+/g, " ");
 
-  // Remove Roman-Tamil duplicates that often appear beside translations.
+  // Remove Roman-Tamil duplicates from the source.
   result = result
     .replace(/\bMerkku\b/gi, "")
     .replace(/\bMerku\b/gi, "")
@@ -74,15 +74,16 @@ function translate(value = "") {
     .replace(/\bThithi\b/gi, "")
     .replace(/\bNatchathiram\b/gi, "")
     .replace(/\bSooriy[a-z]*\b/gi, "")
-    .replace(/\bUdhayam\b/gi, "")
-    .replace(/\(\s*\)/g, "");
+    .replace(/\bUdhayam\b/gi, "");
 
-  // Correct display formatting.
+  // Improve time and separator formatting.
   result = result
     .replace(/(\d{2})\.(\d{2})/g, "$1:$2")
     .replace(/\s*-\s*/g, " – ")
     .replace(/\bAM AM\b/gi, "AM")
     .replace(/\bPM PM\b/gi, "PM")
+    .replace(/\bPM\s+AM\b/gi, "PM")
+    .replace(/\b(West|East|North|South)\s+AM\b/gi, "$1")
     .replace(/\s+/g, " ")
     .trim();
 
