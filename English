@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800, height=480">
+<meta http-equiv="refresh" content="3600">
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    width: 800px;
+    height: 480px;
+    background: white;
+}
+
+.wrapper {
+    width: 800px;
+    height: 480px;
+    overflow: hidden;
+    position: relative;
+}
+
+iframe {
+    width: 1400px;
+    height: 2200px;
+    border: none;
+
+    transform: scale(0.73);
+    transform-origin: top left;
+
+    position: absolute;
+    top: -175px;
+    left: -75px;
+}
+</style>
+</head>
+
+<body>
+<div class="wrapper">
+    <iframe
+        src="https://www-tamildailycalendar-com.translate.goog/tamil_daily_calendar.php?_x_tr_sl=ta&_x_tr_tl=en&_x_tr_hl=en&_x_tr_pto=wapp">
+    </iframe>
+</div>
+</body>
+</html>
