@@ -3,7 +3,7 @@ name: Update English Tamil Calendar
 on:
   workflow_dispatch:
   schedule:
-    - cron: "15 16 * * *"
+    - cron: "15 22 * * *"
 
 permissions:
   contents: write
