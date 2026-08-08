@@ -75,7 +75,7 @@ const replacements = {
   "பௌர்ணமி": "Pournami",
   "பூர்ணிமா": "Pournami",
 
-  // Nakshatra / star names
+  // Nakshatra / Star names
   "அஸ்வினி": "Ashwini",
   "பரணி": "Bharani",
   "கிருத்திகை": "Krittika",
@@ -142,6 +142,54 @@ const replacements = {
   "வினாடி": "seconds"
 };
 
+const starNames = [
+  "Ashwini",
+  "Bharani",
+  "Krittika",
+  "Rohini",
+  "Mrigashirsha",
+  "Thiruvathirai",
+  "Punarpoosam",
+  "Poosam",
+  "Ayilyam",
+  "Magam",
+  "Pooram",
+  "Uthiram",
+  "Hastham",
+  "Swathi",
+  "Visakam",
+  "Anusham",
+  "Kettai",
+  "Moolam",
+  "Pooradam",
+  "Uthiradam",
+  "Thiruvonam",
+  "Avittam",
+  "Sadayam",
+  "Poorattadhi",
+  "Uthirattadhi",
+  "Revathi"
+];
+
+const tithiNames = [
+  "Prathamai",
+  "Dwitiya",
+  "Tritiya",
+  "Chaturthi",
+  "Panchami",
+  "Sashti",
+  "Saptami",
+  "Ashtami",
+  "Navami",
+  "Dasami",
+  "Ekadashi",
+  "Dwadashi",
+  "Trayodashi",
+  "Chaturdashi",
+  "Amavasai",
+  "Pournami"
+];
+
 function clean(value = "") {
   return value
     .replace(/&nbsp;/gi, " ")
@@ -150,18 +198,8 @@ function clean(value = "") {
     .trim();
 }
 
-function translate(value = "") {
-  let result = clean(value);
-
-  for (const [tamil, english] of Object.entries(replacements)) {
-    result = result.split(tamil).join(english);
-  }
-
-  // Remove any Tamil script that was not mapped.
-  result = result.replace(/[\u0B80-\u0BFF]+/g, " ");
-
-  // Remove Roman-Tamil duplicates left by source page.
-  result = result
+function removeDuplicateRomanTamil(result) {
+  return result
     .replace(/\bMerkku\b/gi, "")
     .replace(/\bMerku\b/gi, "")
     .replace(/\bKizhakku\b/gi, "")
@@ -178,8 +216,31 @@ function translate(value = "") {
     .replace(/\bNatchathiram\b/gi, "")
     .replace(/\bSooriy[a-z]*\b/gi, "")
     .replace(/\bUdhayam\b/gi, "");
+}
 
-  // Standard time formatting.
+function removeAmPmAfterKnownNames(result) {
+  const starPattern = starNames.join("|");
+  const tithiPattern = tithiNames.join("|");
+
+  return result
+    .replace(new RegExp(`\\b(${starPattern})\\s+(AM|PM)\\b`, "gi"), "$1")
+    .replace(new RegExp(`\\b(${tithiPattern})\\s+(AM|PM)\\b`, "gi"), "$1")
+    .replace(/\b(West|East|North|South)\s+(AM|PM)\b/gi, "$1");
+}
+
+function translate(value = "") {
+  let result = clean(value);
+
+  for (const [tamil, english] of Object.entries(replacements)) {
+    result = result.split(tamil).join(english);
+  }
+
+  // Remove unmapped Tamil script.
+  result = result.replace(/[\u0B80-\u0BFF]+/g, " ");
+
+  result = removeDuplicateRomanTamil(result);
+
+  // Standard time and separator formatting.
   result = result
     .replace(/(\d{1,2})\.(\d{2})/g, "$1:$2")
     .replace(/\s*-\s*/g, " – ")
@@ -187,11 +248,10 @@ function translate(value = "") {
     .replace(/\bPM PM\b/gi, "PM")
     .replace(/\bPM\s+AM\b/gi, "PM")
     .replace(/\bAM\s+PM\b/gi, "PM")
-    .replace(/\b(West|East|North|South)\s+(AM|PM)\b/gi, "$1")
     .replace(/\s+/g, " ")
     .trim();
 
-  // Convert "Until AM 11:34" to "Until 11:34 AM".
+  // Convert "Until AM 11:34" into "Until 11:34 AM".
   result = result
     .replace(/\bUntil\s+(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1")
     .replace(/^\s*(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1")
@@ -204,15 +264,17 @@ function translate(value = "") {
     .replace(/\bthen\s+(AM|PM)\b/gi, "then")
     .trim();
 
-  // Remove AM/PM after direction words again after cleanup.
+  // Clean known names with stray AM/PM after all other transformations.
+  result = removeAmPmAfterKnownNames(result);
+
+  // Direction duplicate cleanup.
   result = result
-    .replace(/\b(West|East|North|South)\s+(AM|PM)\b/gi, "$1")
     .replace(/\bEast\s+(Kilakku|Kizhakku|Kilaku)\s*(AM|PM)?\b/gi, "East")
     .replace(/\bWest\s+(Merkku|Merku)\s*(AM|PM)?\b/gi, "West")
     .replace(/\bNorth\s+(Vadakku)\s*(AM|PM)?\b/gi, "North")
     .replace(/\bSouth\s+(Therku|Thenku)\s*(AM|PM)?\b/gi, "South");
 
-  // Clean punctuation leftovers.
+  // Punctuation cleanup.
   result = result
     .replace(/\s*,\s*,\s*/g, ", ")
     .replace(/\s*,\s*then\s*/gi, " then ")
