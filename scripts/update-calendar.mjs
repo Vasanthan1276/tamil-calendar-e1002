@@ -2,12 +2,6 @@ import fs from "node:fs/promises";
 
 const URL = "https://www.tamildailycalendar.com/tamil_daily_calendar.php";
 
-/*
-  Fetches Tamil Daily Calendar, extracts today's calendar section,
-  translates common Tamil calendar terms into English,
-  and writes data/calendar.json for English.html to display.
-*/
-
 const replacements = {
   // Tamil months
   "சித்திரை": "Chithirai",
@@ -71,6 +65,7 @@ const replacements = {
   "நவமி": "Navami",
   "தசமி": "Dasami",
   "ஏகாதசி": "Ekadashi",
+  "ஏகாதேசி": "Ekadashi",
   "துவாதசி": "Dwadashi",
   "திரயோதசி": "Trayodashi",
   "சதுர்த்தசி": "Chaturdashi",
@@ -154,19 +149,18 @@ function clean(value = "") {
 function translate(value = "") {
   let result = clean(value);
 
-  // Apply Tamil-to-English replacements.
   for (const [tamil, english] of Object.entries(replacements)) {
     result = result.split(tamil).join(english);
   }
 
-  // Remove remaining Tamil script that was not translated.
   result = result.replace(/[\u0B80-\u0BFF]+/g, " ");
 
-  // Remove common Roman-Tamil duplicates left by the source page.
   result = result
     .replace(/\bMerkku\b/gi, "")
     .replace(/\bMerku\b/gi, "")
     .replace(/\bKizhakku\b/gi, "")
+    .replace(/\bKilakku\b/gi, "")
+    .replace(/\bKilaku\b/gi, "")
     .replace(/\bVadakku\b/gi, "")
     .replace(/\bTherku\b/gi, "")
     .replace(/\bThenku\b/gi, "")
@@ -179,7 +173,6 @@ function translate(value = "") {
     .replace(/\bSooriy[a-z]*\b/gi, "")
     .replace(/\bUdhayam\b/gi, "");
 
-  // Standard formatting.
   result = result
     .replace(/(\d{1,2})\.(\d{2})/g, "$1:$2")
     .replace(/\s*-\s*/g, " – ")
@@ -191,16 +184,17 @@ function translate(value = "") {
     .replace(/\s+/g, " ")
     .trim();
 
-  // Convert "Until AM 11:34" into "Until 11:34 AM".
   result = result
     .replace(/\bUntil\s+(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1")
-    .replace(/^\s*(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1");
-
-  // Convert "PM 03:16 PM" into "Until 03:16 PM".
-  result = result
+    .replace(/^\s*(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1")
     .replace(/\b(AM|PM)\s+(\d{1,2}:\d{2})\s+\1\b/gi, "Until $2 $1");
 
-  // Clean punctuation leftovers.
+  result = result
+    .replace(/\bthen\s+AM\b/gi, "then")
+    .replace(/\bthen\s+PM\b/gi, "then")
+    .replace(/\b([A-Za-z]+)\s+AM$/gi, "$1")
+    .replace(/\b([A-Za-z]+)\s+PM$/gi, "$1");
+
   result = result
     .replace(/\s*,\s*,\s*/g, ", ")
     .replace(/\s*,\s*then\s*/gi, " then ")
@@ -269,8 +263,6 @@ function ensureDayPeriod(value) {
   }
 
   const hour = Number(match[1]);
-
-  // These periods are daytime periods.
   let suffix = "PM";
 
   if (hour >= 7 && hour <= 11) {
@@ -357,12 +349,9 @@ async function main() {
     sraardha_thithi: sectionValue(dailyLines, "Sraardha Thithi", "Thithi"),
     thithi: sectionValue(dailyLines, "Thithi", "Star"),
     star: sectionValue(dailyLines, "Star", "Subakariyam"),
-
-    // Keep the longer original meaning here, not just "A favourable day".
     subakariyam: tidySubakariyam(
       sectionValue(dailyLines, "Subakariyam", "Tamil Rasi Palan")
     ),
-
     updated_at: new Date().toISOString()
   };
 
