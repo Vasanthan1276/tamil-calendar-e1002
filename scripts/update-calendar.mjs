@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 const URL = "https://www.tamildailycalendar.com/tamil_daily_calendar.php";
 
 /*
-  This script fetches the Tamil Daily Calendar page,
-  extracts the daily section, converts common Tamil calendar
-  words to English, and saves the result to data/calendar.json.
+  Fetches Tamil Daily Calendar, extracts today's calendar section,
+  translates common Tamil calendar terms into English,
+  and writes data/calendar.json for English.html to display.
 */
 
 const replacements = {
@@ -23,10 +23,10 @@ const replacements = {
   "மாசி": "Maasi",
   "பங்குனி": "Panguni",
 
-  // Tamil year names commonly appearing in your page
+  // Tamil year names
   "பராபவ": "Parabhava",
 
-  // Directions / remedy
+  // Directions / remedies
   "மேற்கு": "West",
   "கிழக்கு": "East",
   "வடக்கு": "North",
@@ -35,6 +35,8 @@ const replacements = {
   "பால்": "Milk",
   "தயிர்": "Curd",
   "நெய்": "Ghee",
+  "எலுமிச்சை": "Lemon",
+  "சர்க்கரை": "Sugar",
 
   // Time words
   "இன்று அதிகாலை": "Until",
@@ -81,6 +83,7 @@ const replacements = {
   "பரணி": "Bharani",
   "கிருத்திகை": "Krittika",
   "ரோகிணி": "Rohini",
+  "மிருகசீரிடம்": "Mrigashirsha",
   "மிருகசீரிஷம்": "Mrigashirsha",
   "திருவாதிரை": "Thiruvathirai",
   "புனர்பூசம்": "Punarpoosam",
@@ -91,7 +94,6 @@ const replacements = {
   "உத்திரம்": "Uthiram",
   "அஸ்தம்": "Hastham",
   "ஹஸ்தம்": "Hastham",
-  "சித்திரை": "Chithirai",
   "சுவாதி": "Swathi",
   "விசாகம்": "Visakam",
   "அனுஷம்": "Anusham",
@@ -106,21 +108,34 @@ const replacements = {
   "உத்திரட்டாதி": "Uthirattadhi",
   "ரேவதி": "Revathi",
 
-  // Today's note / Subakariyam terms
+  // Today's Note / Subakariyam terms
   "சம நோக்கு நாள்": "Balanced day",
   "மேல் நோக்கு நாள்": "Upward-looking day",
   "கீழ் நோக்கு நாள்": "Downward-looking day",
+
   "மருந்து உண்ண": "Taking medicine",
-  "பேட்டி காண": "Meetings / interviews",
+  "பேட்டி காண": "Attending meetings or interviews",
   "யாத்திரை செய்ய": "Travel",
+  "யாத்திரை போக": "Going on a journey or travel",
   "சிறந்த நாள்": "A favourable day",
-  "கல்வி கற்க": "Education / learning",
-  "கடை திறக்க": "Opening shop",
+
+  "ஆயுதம் பழக": "Practising with tools or weapons",
+  "வார்படஞ் செய்ய": "Making plans, drawings, or layouts",
+  "வார்படம் செய்ய": "Making plans, drawings, or layouts",
+  "சுபம் பேச": "Having auspicious discussions",
+
+  "கல்வி கற்க": "Studying or learning",
+  "கடை திறக்க": "Opening a shop",
   "வியாபாரம் தொடங்க": "Starting business",
   "புது வேலை தொடங்க": "Starting new work",
   "விதை விதைக்க": "Sowing seeds",
-  "உழவு செய்ய": "Farming",
-  "விவசாயம் செய்ய": "Agriculture",
+  "உழவு செய்ய": "Farming work",
+  "விவசாயம் செய்ய": "Agriculture work",
+  "புது வீடு புக": "Entering a new house",
+  "வாகனம் வாங்க": "Buying a vehicle",
+  "நகை வாங்க": "Buying jewellery",
+  "பணம் கொடுக்க": "Giving money",
+  "பணம் வாங்க": "Receiving money",
 
   // Misc
   "மிதுன லக்னம்": "Gemini ascendant",
@@ -139,11 +154,12 @@ function clean(value = "") {
 function translate(value = "") {
   let result = clean(value);
 
+  // Apply Tamil-to-English replacements.
   for (const [tamil, english] of Object.entries(replacements)) {
     result = result.split(tamil).join(english);
   }
 
-  // Remove Tamil script that we did not translate.
+  // Remove remaining Tamil script that was not translated.
   result = result.replace(/[\u0B80-\u0BFF]+/g, " ");
 
   // Remove common Roman-Tamil duplicates left by the source page.
@@ -175,18 +191,19 @@ function translate(value = "") {
     .replace(/\s+/g, " ")
     .trim();
 
-  // Convert patterns like "Until AM 11:34" or "AM 11:34" into "Until 11:34 AM".
+  // Convert "Until AM 11:34" into "Until 11:34 AM".
   result = result
     .replace(/\bUntil\s+(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1")
     .replace(/^\s*(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1");
 
-  // Convert patterns like "PM 03:16 PM" into "Until 03:16 PM".
+  // Convert "PM 03:16 PM" into "Until 03:16 PM".
   result = result
     .replace(/\b(AM|PM)\s+(\d{1,2}:\d{2})\s+\1\b/gi, "Until $2 $1");
 
-  // Clean punctuation leftovers, especially in Today's Note.
+  // Clean punctuation leftovers.
   result = result
     .replace(/\s*,\s*,\s*/g, ", ")
+    .replace(/\s*,\s*then\s*/gi, " then ")
     .replace(/^\s*[,./;:-]+\s*/g, "")
     .replace(/\s+[,./;:-]\s*$/g, "")
     .replace(/\s+/g, " ")
@@ -274,10 +291,6 @@ function tidySubakariyam(value) {
     return "Traditional favourable activities";
   }
 
-  if (result === "A favourable day") {
-    return "A favourable day";
-  }
-
   return result;
 }
 
@@ -344,6 +357,8 @@ async function main() {
     sraardha_thithi: sectionValue(dailyLines, "Sraardha Thithi", "Thithi"),
     thithi: sectionValue(dailyLines, "Thithi", "Star"),
     star: sectionValue(dailyLines, "Star", "Subakariyam"),
+
+    // Keep the longer original meaning here, not just "A favourable day".
     subakariyam: tidySubakariyam(
       sectionValue(dailyLines, "Subakariyam", "Tamil Rasi Palan")
     ),
