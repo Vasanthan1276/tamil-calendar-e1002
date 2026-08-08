@@ -144,7 +144,18 @@ html, body {
     border-top: 1px solid #777;
     font-size: 9px;
     color: #444;
-    line-height: 1.0;
+    line-height: 1.05;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.status-current {
+    font-weight: 700;
+}
+
+.status-stale {
+    font-weight: 700;
 }
 </style>
 </head>
@@ -233,7 +244,8 @@ html, body {
     </div>
 
     <div class="footer">
-        Calendar source: Tamil Daily Calendar · Traditional reference only
+        <div id="updatedAt">Updated: —</div>
+        <div id="dataStatus">Status: checking...</div>
     </div>
 
 </div>
@@ -255,6 +267,53 @@ const fields = {
     subakariyam: "subakariyam"
 };
 
+function formatSgtDateTime(isoText) {
+    if (!isoText) return "—";
+
+    const date = new Date(isoText);
+
+    if (isNaN(date.getTime())) return "—";
+
+    return date.toLocaleString("en-SG", {
+        timeZone: "Asia/Singapore",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+    }) + " SGT";
+}
+
+function updateStaleStatus(isoText) {
+    const status = document.getElementById("dataStatus");
+
+    if (!isoText) {
+        status.textContent = "Status: unknown";
+        status.className = "status-stale";
+        return;
+    }
+
+    const updated = new Date(isoText);
+    const now = new Date();
+
+    if (isNaN(updated.getTime())) {
+        status.textContent = "Status: unknown";
+        status.className = "status-stale";
+        return;
+    }
+
+    const ageHours = (now - updated) / (1000 * 60 * 60);
+
+    if (ageHours > 36) {
+        status.textContent = "Status: data may be stale";
+        status.className = "status-stale";
+    } else {
+        status.textContent = "Status: current";
+        status.className = "status-current";
+    }
+}
+
 fetch("data/calendar.json?ts=" + Date.now())
     .then(response => {
         if (!response.ok) {
@@ -269,9 +328,17 @@ fetch("data/calendar.json?ts=" + Date.now())
                 element.textContent = data[jsonKey] || "Not available";
             }
         }
+
+        document.getElementById("updatedAt").textContent =
+            "Updated: " + formatSgtDateTime(data.updated_at);
+
+        updateStaleStatus(data.updated_at);
     })
     .catch(() => {
         document.getElementById("date").textContent = "Calendar data unavailable";
+        document.getElementById("updatedAt").textContent = "Updated: —";
+        document.getElementById("dataStatus").textContent = "Status: data unavailable";
+        document.getElementById("dataStatus").className = "status-stale";
     });
 </script>
 
