@@ -3,7 +3,6 @@ import fs from "node:fs/promises";
 const URL = "https://www.tamildailycalendar.com/tamil_daily_calendar.php";
 
 const replacements = {
-  // Tamil months
   "சித்திரை": "Chithirai",
   "வைகாசி": "Vaikasi",
   "ஆனி": "Aani",
@@ -17,16 +16,13 @@ const replacements = {
   "மாசி": "Maasi",
   "பங்குனி": "Panguni",
 
-  // Tamil year names
   "பராபவ": "Parabhava",
 
-  // Directions
   "மேற்கு": "West",
   "கிழக்கு": "East",
   "வடக்கு": "North",
   "தெற்கு": "South",
 
-  // Remedies
   "வெல்லம்": "Jaggery",
   "பால்": "Milk",
   "தயிர்": "Curd",
@@ -34,7 +30,6 @@ const replacements = {
   "எலுமிச்சை": "Lemon",
   "சர்க்கரை": "Sugar",
 
-  // Time words
   "இன்று அதிகாலை": "Until",
   "இன்று காலை": "Until",
   "இன்று மதியம்": "Until",
@@ -49,13 +44,11 @@ const replacements = {
   "வரை": "",
   "பின்பு": "then",
 
-  // AM / PM source text
   "கா / AM": "AM",
   "மா / PM": "PM",
   "கா": "AM",
   "மா": "PM",
 
-  // Tithi names
   "பிரதமை": "Prathamai",
   "துவிதியை": "Dwitiya",
   "திருதியை": "Tritiya",
@@ -75,7 +68,6 @@ const replacements = {
   "பௌர்ணமி": "Pournami",
   "பூர்ணிமா": "Pournami",
 
-  // Nakshatra / Star names
   "அஸ்வினி": "Ashwini",
   "பரணி": "Bharani",
   "கிருத்திகை": "Krittika",
@@ -107,87 +99,52 @@ const replacements = {
   "உத்திரட்டாதி": "Uthirattadhi",
   "ரேவதி": "Revathi",
 
-  // Today's Note / Subakariyam terms
   "சம நோக்கு நாள்": "Balanced day",
   "மேல் நோக்கு நாள்": "Upward-looking day",
   "கீழ் நோக்கு நாள்": "Downward-looking day",
 
-  "மருந்து உண்ண": "Taking medicine",
-  "பேட்டி காண": "Attending meetings or interviews",
-  "யாத்திரை செய்ய": "Travel",
-  "யாத்திரை போக": "Going on a journey or travel",
-  "சிறந்த நாள்": "A favourable day",
+  "மருந்து உண்ண": "taking medicine",
+  "பேட்டி காண": "attending meetings or interviews",
+  "யாத்திரை செய்ய": "travel",
+  "யாத்திரை போக": "going on a journey or travel",
+  "சிறந்த நாள்": "a favourable day",
 
-  "ஆயுதம் பழக": "Practising with tools or weapons",
-  "வார்படஞ் செய்ய": "Making plans, drawings, or layouts",
-  "வார்படம் செய்ய": "Making plans, drawings, or layouts",
-  "சுபம் பேச": "Having auspicious discussions",
+  "ஆயுதம் பழக": "practising with tools or weapons",
+  "வார்படஞ் செய்ய": "making plans, drawings, or layouts",
+  "வார்படம் செய்ய": "making plans, drawings, or layouts",
+  "சுபம் பேச": "having auspicious discussions",
 
-  "கல்வி கற்க": "Studying or learning",
-  "கடை திறக்க": "Opening a shop",
-  "வியாபாரம் தொடங்க": "Starting business",
-  "புது வேலை தொடங்க": "Starting new work",
-  "விதை விதைக்க": "Sowing seeds",
-  "உழவு செய்ய": "Farming work",
-  "விவசாயம் செய்ய": "Agriculture work",
-  "புது வீடு புக": "Entering a new house",
-  "வாகனம் வாங்க": "Buying a vehicle",
-  "நகை வாங்க": "Buying jewellery",
-  "பணம் கொடுக்க": "Giving money",
-  "பணம் வாங்க": "Receiving money",
+  "கல்வி கற்க": "studying or learning",
+  "கடை திறக்க": "opening a shop",
+  "வியாபாரம் தொடங்க": "starting business",
+  "புது வேலை தொடங்க": "starting new work",
+  "விதை விதைக்க": "sowing seeds",
+  "உழவு செய்ய": "farming work",
+  "விவசாயம் செய்ய": "agriculture work",
+  "புது வீடு புக": "entering a new house",
+  "வாகனம் வாங்க": "buying a vehicle",
+  "நகை வாங்க": "buying jewellery",
+  "பணம் கொடுக்க": "giving money",
+  "பணம் வாங்க": "receiving money",
 
-  // Misc
   "மிதுன லக்னம்": "Gemini ascendant",
   "இருப்பு நாழிகை": "Balance",
   "வினாடி": "seconds"
 };
 
 const starNames = [
-  "Ashwini",
-  "Bharani",
-  "Krittika",
-  "Rohini",
-  "Mrigashirsha",
-  "Thiruvathirai",
-  "Punarpoosam",
-  "Poosam",
-  "Ayilyam",
-  "Magam",
-  "Pooram",
-  "Uthiram",
-  "Hastham",
-  "Swathi",
-  "Visakam",
-  "Anusham",
-  "Kettai",
-  "Moolam",
-  "Pooradam",
-  "Uthiradam",
-  "Thiruvonam",
-  "Avittam",
-  "Sadayam",
-  "Poorattadhi",
-  "Uthirattadhi",
-  "Revathi"
+  "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashirsha",
+  "Thiruvathirai", "Punarpoosam", "Poosam", "Ayilyam", "Magam",
+  "Pooram", "Uthiram", "Hastham", "Swathi", "Visakam", "Anusham",
+  "Kettai", "Moolam", "Pooradam", "Uthiradam", "Thiruvonam",
+  "Avittam", "Sadayam", "Poorattadhi", "Uthirattadhi", "Revathi"
 ];
 
 const tithiNames = [
-  "Prathamai",
-  "Dwitiya",
-  "Tritiya",
-  "Chaturthi",
-  "Panchami",
-  "Sashti",
-  "Saptami",
-  "Ashtami",
-  "Navami",
-  "Dasami",
-  "Ekadashi",
-  "Dwadashi",
-  "Trayodashi",
-  "Chaturdashi",
-  "Amavasai",
-  "Pournami"
+  "Prathamai", "Dwitiya", "Tritiya", "Chaturthi", "Panchami",
+  "Sashti", "Saptami", "Ashtami", "Navami", "Dasami",
+  "Ekadashi", "Dwadashi", "Trayodashi", "Chaturdashi",
+  "Amavasai", "Pournami"
 ];
 
 function clean(value = "") {
@@ -235,12 +192,9 @@ function translate(value = "") {
     result = result.split(tamil).join(english);
   }
 
-  // Remove unmapped Tamil script.
   result = result.replace(/[\u0B80-\u0BFF]+/g, " ");
-
   result = removeDuplicateRomanTamil(result);
 
-  // Standard time and separator formatting.
   result = result
     .replace(/(\d{1,2})\.(\d{2})/g, "$1:$2")
     .replace(/\s*-\s*/g, " – ")
@@ -251,30 +205,25 @@ function translate(value = "") {
     .replace(/\s+/g, " ")
     .trim();
 
-  // Convert "Until AM 11:34" into "Until 11:34 AM".
   result = result
     .replace(/\bUntil\s+(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1")
     .replace(/^\s*(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1")
     .replace(/\b(AM|PM)\s+(\d{1,2}:\d{2})\s+\1\b/gi, "Until $2 $1");
 
-  // Remove broken endings like "then AM" or "then PM".
   result = result
     .replace(/\s+then\s+(AM|PM)\s*$/gi, "")
     .replace(/\s+then\s*$/gi, "")
     .replace(/\bthen\s+(AM|PM)\b/gi, "then")
     .trim();
 
-  // Clean known names with stray AM/PM after all other transformations.
   result = removeAmPmAfterKnownNames(result);
 
-  // Direction duplicate cleanup.
   result = result
     .replace(/\bEast\s+(Kilakku|Kizhakku|Kilaku)\s*(AM|PM)?\b/gi, "East")
     .replace(/\bWest\s+(Merkku|Merku)\s*(AM|PM)?\b/gi, "West")
     .replace(/\bNorth\s+(Vadakku)\s*(AM|PM)?\b/gi, "North")
     .replace(/\bSouth\s+(Therku|Thenku)\s*(AM|PM)?\b/gi, "South");
 
-  // Punctuation cleanup.
   result = result
     .replace(/\s*,\s*,\s*/g, ", ")
     .replace(/\s*,\s*then\s*/gi, " then ")
@@ -304,18 +253,14 @@ function htmlToLines(html) {
 function sectionValue(lines, label, nextLabel) {
   const startIndex = lines.findIndex(line => line.startsWith(label));
 
-  if (startIndex === -1) {
-    return "Not available";
-  }
+  if (startIndex === -1) return "Not available";
 
   const values = [];
 
   for (let i = startIndex; i < lines.length; i++) {
     const line = lines[i];
 
-    if (i > startIndex && line.startsWith(nextLabel)) {
-      break;
-    }
+    if (i > startIndex && line.startsWith(nextLabel)) break;
 
     if (i === startIndex) {
       values.push(line.slice(label.length).trim());
@@ -337,16 +282,9 @@ function ensureDayPeriod(value) {
   }
 
   const match = value.match(/(\d{1,2}):\d{2}/);
-
-  if (!match) {
-    return value;
-  }
+  if (!match) return value;
 
   const hour = Number(match[1]);
-
-  // Rahu Kaalam, Yamagandam and Kuligai are daytime periods.
-  // If the source gives 06:00, 07:30, 09:00, or 10:30 without AM/PM,
-  // treat it as AM. 12:00 and 01:30 onwards are PM.
   let suffix = "PM";
 
   if (hour >= 6 && hour <= 11) {
@@ -364,8 +302,19 @@ function tidySubakariyam(value) {
     .trim();
 
   if (!result || result === "Not available") {
-    return "Traditional favourable activities";
+    return "Good for: traditional favourable activities";
   }
+
+  result = result.replace(/\bA favourable day\b/gi, "a favourable day");
+
+  if (!/^Good for:/i.test(result)) {
+    result = `Good for: ${result}`;
+  }
+
+  result = result
+    .replace(/,\s*a favourable day$/i, "; generally a favourable day")
+    .replace(/\s+/g, " ")
+    .trim();
 
   return result;
 }
