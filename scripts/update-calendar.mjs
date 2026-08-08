@@ -20,11 +20,13 @@ const replacements = {
   // Tamil year names
   "பராபவ": "Parabhava",
 
-  // Directions / remedies
+  // Directions
   "மேற்கு": "West",
   "கிழக்கு": "East",
   "வடக்கு": "North",
   "தெற்கு": "South",
+
+  // Remedies
   "வெல்லம்": "Jaggery",
   "பால்": "Milk",
   "தயிர்": "Curd",
@@ -80,6 +82,8 @@ const replacements = {
   "ரோகிணி": "Rohini",
   "மிருகசீரிடம்": "Mrigashirsha",
   "மிருகசீரிஷம்": "Mrigashirsha",
+  "மிருகசிரிடம்": "Mrigashirsha",
+  "மிருகசிரிஷம்": "Mrigashirsha",
   "திருவாதிரை": "Thiruvathirai",
   "புனர்பூசம்": "Punarpoosam",
   "பூசம்": "Poosam",
@@ -153,8 +157,10 @@ function translate(value = "") {
     result = result.split(tamil).join(english);
   }
 
+  // Remove any Tamil script that was not mapped.
   result = result.replace(/[\u0B80-\u0BFF]+/g, " ");
 
+  // Remove Roman-Tamil duplicates left by source page.
   result = result
     .replace(/\bMerkku\b/gi, "")
     .replace(/\bMerku\b/gi, "")
@@ -173,6 +179,7 @@ function translate(value = "") {
     .replace(/\bSooriy[a-z]*\b/gi, "")
     .replace(/\bUdhayam\b/gi, "");
 
+  // Standard time formatting.
   result = result
     .replace(/(\d{1,2})\.(\d{2})/g, "$1:$2")
     .replace(/\s*-\s*/g, " – ")
@@ -184,17 +191,28 @@ function translate(value = "") {
     .replace(/\s+/g, " ")
     .trim();
 
+  // Convert "Until AM 11:34" to "Until 11:34 AM".
   result = result
     .replace(/\bUntil\s+(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1")
     .replace(/^\s*(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1")
     .replace(/\b(AM|PM)\s+(\d{1,2}:\d{2})\s+\1\b/gi, "Until $2 $1");
 
+  // Remove broken endings like "then AM" or "then PM".
   result = result
-    .replace(/\bthen\s+AM\b/gi, "then")
-    .replace(/\bthen\s+PM\b/gi, "then")
-    .replace(/\b([A-Za-z]+)\s+AM$/gi, "$1")
-    .replace(/\b([A-Za-z]+)\s+PM$/gi, "$1");
+    .replace(/\s+then\s+(AM|PM)\s*$/gi, "")
+    .replace(/\s+then\s*$/gi, "")
+    .replace(/\bthen\s+(AM|PM)\b/gi, "then")
+    .trim();
 
+  // Remove AM/PM after direction words again after cleanup.
+  result = result
+    .replace(/\b(West|East|North|South)\s+(AM|PM)\b/gi, "$1")
+    .replace(/\bEast\s+(Kilakku|Kizhakku|Kilaku)\s*(AM|PM)?\b/gi, "East")
+    .replace(/\bWest\s+(Merkku|Merku)\s*(AM|PM)?\b/gi, "West")
+    .replace(/\bNorth\s+(Vadakku)\s*(AM|PM)?\b/gi, "North")
+    .replace(/\bSouth\s+(Therku|Thenku)\s*(AM|PM)?\b/gi, "South");
+
+  // Clean punctuation leftovers.
   result = result
     .replace(/\s*,\s*,\s*/g, ", ")
     .replace(/\s*,\s*then\s*/gi, " then ")
