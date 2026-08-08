@@ -2,7 +2,14 @@ import fs from "node:fs/promises";
 
 const URL = "https://www.tamildailycalendar.com/tamil_daily_calendar.php";
 
+/*
+  This script fetches the Tamil Daily Calendar page,
+  extracts the daily section, converts common Tamil calendar
+  words to English, and saves the result to data/calendar.json.
+*/
+
 const replacements = {
+  // Tamil months
   "சித்திரை": "Chithirai",
   "வைகாசி": "Vaikasi",
   "ஆனி": "Aani",
@@ -16,33 +23,109 @@ const replacements = {
   "மாசி": "Maasi",
   "பங்குனி": "Panguni",
 
+  // Tamil year names commonly appearing in your page
   "பராபவ": "Parabhava",
 
+  // Directions / remedy
   "மேற்கு": "West",
   "கிழக்கு": "East",
   "வடக்கு": "North",
   "தெற்கு": "South",
-
   "வெல்லம்": "Jaggery",
+  "பால்": "Milk",
+  "தயிர்": "Curd",
+  "நெய்": "Ghee",
 
+  // Time words
+  "இன்று அதிகாலை": "Until",
+  "இன்று காலை": "Until",
+  "இன்று மதியம்": "Until",
+  "இன்று மாலை": "Until",
+  "இன்று இரவு": "Until",
+  "அதிகாலை": "AM",
+  "காலை": "AM",
+  "மதியம்": "PM",
+  "மாலை": "PM",
+  "இரவு": "PM",
+  "மணி": "",
+  "வரை": "",
+  "பின்பு": "then",
+
+  // AM / PM source text
+  "கா / AM": "AM",
+  "மா / PM": "PM",
+  "கா": "AM",
+  "மா": "PM",
+
+  // Tithi names
+  "பிரதமை": "Prathamai",
+  "துவிதியை": "Dwitiya",
+  "திருதியை": "Tritiya",
+  "சதுர்த்தி": "Chaturthi",
+  "பஞ்சமி": "Panchami",
+  "சஷ்டி": "Sashti",
+  "சப்தமி": "Saptami",
+  "அஷ்டமி": "Ashtami",
+  "நவமி": "Navami",
+  "தசமி": "Dasami",
+  "ஏகாதசி": "Ekadashi",
+  "துவாதசி": "Dwadashi",
   "திரயோதசி": "Trayodashi",
   "சதுர்த்தசி": "Chaturdashi",
+  "அமாவாசை": "Amavasai",
+  "பௌர்ணமி": "Pournami",
+  "பூர்ணிமா": "Pournami",
+
+  // Nakshatra / star names
+  "அஸ்வினி": "Ashwini",
+  "பரணி": "Bharani",
+  "கிருத்திகை": "Krittika",
+  "ரோகிணி": "Rohini",
+  "மிருகசீரிஷம்": "Mrigashirsha",
+  "திருவாதிரை": "Thiruvathirai",
+  "புனர்பூசம்": "Punarpoosam",
+  "பூசம்": "Poosam",
+  "ஆயில்யம்": "Ayilyam",
+  "மகம்": "Magam",
+  "பூரம்": "Pooram",
+  "உத்திரம்": "Uthiram",
+  "அஸ்தம்": "Hastham",
+  "ஹஸ்தம்": "Hastham",
+  "சித்திரை": "Chithirai",
+  "சுவாதி": "Swathi",
+  "விசாகம்": "Visakam",
   "அனுஷம்": "Anusham",
   "கேட்டை": "Kettai",
+  "மூலம்": "Moolam",
+  "பூராடம்": "Pooradam",
+  "உத்திராடம்": "Uthiradam",
+  "திருவோணம்": "Thiruvonam",
+  "அவிட்டம்": "Avittam",
+  "சதயம்": "Sadayam",
+  "பூரட்டாதி": "Poorattadhi",
+  "உத்திரட்டாதி": "Uthirattadhi",
+  "ரேவதி": "Revathi",
 
+  // Today's note / Subakariyam terms
+  "சம நோக்கு நாள்": "Balanced day",
+  "மேல் நோக்கு நாள்": "Upward-looking day",
+  "கீழ் நோக்கு நாள்": "Downward-looking day",
   "மருந்து உண்ண": "Taking medicine",
   "பேட்டி காண": "Meetings / interviews",
   "யாத்திரை செய்ய": "Travel",
   "சிறந்த நாள்": "A favourable day",
+  "கல்வி கற்க": "Education / learning",
+  "கடை திறக்க": "Opening shop",
+  "வியாபாரம் தொடங்க": "Starting business",
+  "புது வேலை தொடங்க": "Starting new work",
+  "விதை விதைக்க": "Sowing seeds",
+  "உழவு செய்ய": "Farming",
+  "விவசாயம் செய்ய": "Agriculture",
 
-  "இன்று அதிகாலை": "Until",
-  "வரை": "",
-  "பின்பு": "then",
-
-  "கா / AM": "AM",
-  "மா / PM": "PM",
-  "கா": "AM",
-  "மா": "PM"
+  // Misc
+  "மிதுன லக்னம்": "Gemini ascendant",
+  "இருப்பு நாழிகை": "Balance",
+  "வினாடி": "seconds"
 };
 
 function clean(value = "") {
@@ -60,27 +143,52 @@ function translate(value = "") {
     result = result.split(tamil).join(english);
   }
 
+  // Remove Tamil script that we did not translate.
   result = result.replace(/[\u0B80-\u0BFF]+/g, " ");
 
+  // Remove common Roman-Tamil duplicates left by the source page.
   result = result
     .replace(/\bMerkku\b/gi, "")
     .replace(/\bMerku\b/gi, "")
-    .replace(/\bVellam\b/gi, "")
     .replace(/\bKizhakku\b/gi, "")
     .replace(/\bVadakku\b/gi, "")
+    .replace(/\bTherku\b/gi, "")
     .replace(/\bThenku\b/gi, "")
+    .replace(/\bVellam\b/gi, "")
+    .replace(/\bPaal\b/gi, "")
+    .replace(/\bThayir\b/gi, "")
+    .replace(/\bNei\b/gi, "")
     .replace(/\bThithi\b/gi, "")
     .replace(/\bNatchathiram\b/gi, "")
     .replace(/\bSooriy[a-z]*\b/gi, "")
     .replace(/\bUdhayam\b/gi, "");
 
+  // Standard formatting.
   result = result
-    .replace(/(\d{2})\.(\d{2})/g, "$1:$2")
+    .replace(/(\d{1,2})\.(\d{2})/g, "$1:$2")
     .replace(/\s*-\s*/g, " – ")
     .replace(/\bAM AM\b/gi, "AM")
     .replace(/\bPM PM\b/gi, "PM")
     .replace(/\bPM\s+AM\b/gi, "PM")
-    .replace(/\b(West|East|North|South)\s+AM\b/gi, "$1")
+    .replace(/\bAM\s+PM\b/gi, "PM")
+    .replace(/\b(West|East|North|South)\s+(AM|PM)\b/gi, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Convert patterns like "Until AM 11:34" or "AM 11:34" into "Until 11:34 AM".
+  result = result
+    .replace(/\bUntil\s+(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1")
+    .replace(/^\s*(AM|PM)\s+(\d{1,2}:\d{2})\b/gi, "Until $2 $1");
+
+  // Convert patterns like "PM 03:16 PM" into "Until 03:16 PM".
+  result = result
+    .replace(/\b(AM|PM)\s+(\d{1,2}:\d{2})\s+\1\b/gi, "Until $2 $1");
+
+  // Clean punctuation leftovers, especially in Today's Note.
+  result = result
+    .replace(/\s*,\s*,\s*/g, ", ")
+    .replace(/^\s*[,./;:-]+\s*/g, "")
+    .replace(/\s+[,./;:-]\s*$/g, "")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -129,11 +237,9 @@ function sectionValue(lines, label, nextLabel) {
 }
 
 function addTimeSeparator(value) {
-  return value.replace(/(AM|PM)\s+(\d{2}:\d{2})/g, "$1 / $2");
+  return value.replace(/(AM|PM)\s+(\d{1,2}:\d{2})/g, "$1 / $2");
 }
 
-/* Adds AM or PM when the Tamil source leaves it out.
-   These three daily periods occur only from morning through evening. */
 function ensureDayPeriod(value) {
   if (!value || value === "Not available" || /\b(AM|PM)\b/i.test(value)) {
     return value;
@@ -147,6 +253,7 @@ function ensureDayPeriod(value) {
 
   const hour = Number(match[1]);
 
+  // These periods are daytime periods.
   let suffix = "PM";
 
   if (hour >= 7 && hour <= 11) {
@@ -154,6 +261,24 @@ function ensureDayPeriod(value) {
   }
 
   return `${value} ${suffix}`;
+}
+
+function tidySubakariyam(value) {
+  let result = value
+    .replace(/^\s*[,./;:-]+\s*/g, "")
+    .replace(/\s*,\s*,\s*/g, ", ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!result || result === "Not available") {
+    return "Traditional favourable activities";
+  }
+
+  if (result === "A favourable day") {
+    return "A favourable day";
+  }
+
+  return result;
 }
 
 async function main() {
@@ -219,7 +344,10 @@ async function main() {
     sraardha_thithi: sectionValue(dailyLines, "Sraardha Thithi", "Thithi"),
     thithi: sectionValue(dailyLines, "Thithi", "Star"),
     star: sectionValue(dailyLines, "Star", "Subakariyam"),
-    subakariyam: sectionValue(dailyLines, "Subakariyam", "Tamil Rasi Palan"),
+    subakariyam: tidySubakariyam(
+      sectionValue(dailyLines, "Subakariyam", "Tamil Rasi Palan")
+    ),
+
     updated_at: new Date().toISOString()
   };
 
