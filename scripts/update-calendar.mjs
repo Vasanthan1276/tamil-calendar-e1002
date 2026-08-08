@@ -343,9 +343,13 @@ function ensureDayPeriod(value) {
   }
 
   const hour = Number(match[1]);
+
+  // Rahu Kaalam, Yamagandam and Kuligai are daytime periods.
+  // If the source gives 06:00, 07:30, 09:00, or 10:30 without AM/PM,
+  // treat it as AM. 12:00 and 01:30 onwards are PM.
   let suffix = "PM";
 
-  if (hour >= 7 && hour <= 11) {
+  if (hour >= 6 && hour <= 11) {
     suffix = "AM";
   }
 
