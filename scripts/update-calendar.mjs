@@ -420,7 +420,7 @@ function tidySubakariyam(value) {
   }
 
   result = result
-    .replace(/,\s*a favourable day$/i, "; generally a favourable day")
+    .replace(/(?:,\s*|\s+)a favourable day[.!]?$/i, "; generally a favourable day")
     .replace(/Good for:\s*(?:AM|PM)\b[\s,;:.-]*/i, "Good for: ")
     .replace(/\s+/g, " ")
     .trim();
