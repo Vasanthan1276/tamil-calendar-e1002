@@ -180,9 +180,18 @@ function removeAmPmAfterKnownNames(result) {
   const tithiPattern = tithiNames.join("|");
 
   return result
-    .replace(new RegExp(`\\b(${starPattern})\\s+(AM|PM)\\b`, "gi"), "$1")
-    .replace(new RegExp(`\\b(${tithiPattern})\\s+(AM|PM)\\b`, "gi"), "$1")
-    .replace(/\b(West|East|North|South)\s+(AM|PM)\b/gi, "$1");
+    .replace(
+      new RegExp(`\\b(${starPattern})\\s+(?:(?:AM|PM)\\s*)+`, "gi"),
+      "$1 "
+    )
+    .replace(
+      new RegExp(`\\b(${tithiPattern})\\s+(?:(?:AM|PM)\\s*)+`, "gi"),
+      "$1 "
+    )
+    .replace(/\b(West|East|North|South)\s+(?:(?:AM|PM)\s*)+/gi, "$1 ")
+    .replace(/\b(AM|PM)(?:\s+\1)+\b/gi, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function translate(value = "") {
@@ -276,32 +285,131 @@ function addTimeSeparator(value) {
   return value.replace(/(AM|PM)\s+(\d{1,2}:\d{2})/g, "$1 / $2");
 }
 
+function inferredDayPeriod(hour) {
+  return hour >= 6 && hour <= 11 ? "AM" : "PM";
+}
+
+function normalizeDaytimeRange(value) {
+  if (!value || value === "Not available") return value;
+
+  return value
+    .replace(
+      /(\d{1,2}):(\d{2})\s*(AM|PM)?\s*–\s*(\d{1,2}):(\d{2})\s*(AM|PM)?/gi,
+      (match, startHour, startMinute, startPeriod, endHour, endMinute, endPeriod) => {
+        const start = Number(startHour);
+        const end = Number(endHour);
+
+        let startSuffix;
+        let endSuffix;
+
+        if (start >= 6 && start <= 11) {
+          startSuffix = "AM";
+          endSuffix = end >= 6 && end <= 11 ? "AM" : "PM";
+        } else {
+          startSuffix = "PM";
+          endSuffix = "PM";
+        }
+
+        return `${startHour}:${startMinute} ${startSuffix} – ` +
+          `${endHour}:${endMinute} ${endSuffix}`;
+      }
+    )
+    .replace(/\b(AM|PM)(?:\s+\1)+\b/gi, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function ensureDayPeriod(value) {
-  if (!value || value === "Not available" || /\b(AM|PM)\b/i.test(value)) {
-    return value;
-  }
+  return normalizeDaytimeRange(value);
+}
 
-  const match = value.match(/(\d{1,2}):\d{2}/);
-  if (!match) return value;
+function cleanGowriNeram(value) {
+  if (!value || value === "Not available") return "Not available";
 
-  const hour = Number(match[1]);
-  let suffix = "PM";
+  let result = value
+    .replace(
+      /00:00\s*(?:AM|PM)?\s*–\s*00:00\s*(?:AM|PM)?/gi,
+      ""
+    )
+    .replace(
+      /(\d{1,2}):(\d{2})\s*(AM|PM)?\s*–\s*(\d{1,2}):(\d{2})\s*(AM|PM)?/gi,
+      (match, startHour, startMinute, startPeriod, endHour, endMinute, endPeriod) => {
+        const start = Number(startHour);
+        const end = Number(endHour);
 
-  if (hour >= 6 && hour <= 11) {
-    suffix = "AM";
-  }
+        let startSuffix = startPeriod ? startPeriod.toUpperCase() : "";
+        let endSuffix = endPeriod ? endPeriod.toUpperCase() : "";
 
-  return `${value} ${suffix}`;
+        const sourceSaysAM = startSuffix === "AM" || endSuffix === "AM";
+        const afternoonClockRange = start === 12 || (start >= 1 && start <= 5);
+
+        // The source repeatedly labels afternoon Gowri slots such as
+        // 12:15–01:15 and 01:45–02:45 as AM. Correct only this field.
+        if (sourceSaysAM && afternoonClockRange) {
+          startSuffix = "PM";
+          endSuffix = "PM";
+        } else {
+          if (!startSuffix && endSuffix) startSuffix = endSuffix;
+          if (!endSuffix && startSuffix) endSuffix = startSuffix;
+          if (!startSuffix) startSuffix = inferredDayPeriod(start);
+          if (!endSuffix) endSuffix = inferredDayPeriod(end);
+        }
+
+        return `${startHour}:${startMinute} ${startSuffix} – ` +
+          `${endHour}:${endMinute} ${endSuffix}`;
+      }
+    );
+
+  result = addTimeSeparator(result)
+    .replace(/^\s*\/\s*/g, "")
+    .replace(/\s*\/\s*$/g, "")
+    .replace(/\s*\/\s*\/\s*/g, " / ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return result || "Not available";
+}
+
+function cleanTamilDate(value) {
+  if (!value || value === "Not available") return "Not available";
+
+  const tithiPattern = tithiNames.join("|");
+
+  const result = removeAmPmAfterKnownNames(value)
+    .replace(/\bToday\b/gi, " ")
+    .replace(new RegExp(`\\b(?:${tithiPattern})\\b`, "gi"), " ")
+    .replace(/\b(?:AM|PM)\b/gi, " ")
+    .replace(/\s*–\s*/g, " – ")
+    .replace(/(?:\s*–\s*){2,}/g, " – ")
+    .replace(/^\s*–\s*|\s*–\s*$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return result || "Not available";
+}
+
+function tidyNamedCalendarValue(value) {
+  if (!value || value === "Not available") return "Not available";
+
+  const result = removeAmPmAfterKnownNames(value)
+    .replace(/\b(AM|PM)(?:\s+\1)+\b/gi, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return result || "Not available";
 }
 
 function tidySubakariyam(value) {
   let result = value
     .replace(/^\s*[,./;:-]+\s*/g, "")
     .replace(/\s*,\s*,\s*/g, ", ")
+    .replace(/^\s*(?:AM|PM)\b[\s,;:.-]*/i, "")
+    .replace(/[\s,;:.-]*\b(?:AM|PM)\s*$/i, "")
+    .replace(/(^|[,;])\s*(?:AM|PM)\s*(?=[,;]|$)/gi, "$1")
     .replace(/\s+/g, " ")
     .trim();
 
-  if (!result || result === "Not available") {
+  if (!result || result === "Not available" || /^(?:AM|PM)$/i.test(result)) {
     return "Good for: traditional favourable activities";
   }
 
@@ -313,8 +421,13 @@ function tidySubakariyam(value) {
 
   result = result
     .replace(/,\s*a favourable day$/i, "; generally a favourable day")
+    .replace(/Good for:\s*(?:AM|PM)\b[\s,;:.-]*/i, "Good for: ")
     .replace(/\s+/g, " ")
     .trim();
+
+  if (/^Good for:\s*$/i.test(result)) {
+    return "Good for: traditional favourable activities";
+  }
 
   return result;
 }
@@ -352,25 +465,27 @@ async function main() {
 
   const data = {
     date: dailyLines[0] || "Not available",
-    tamil_date: sectionValue(dailyLines, "Date", "Nalla Neram"),
+    tamil_date: cleanTamilDate(
+      sectionValue(dailyLines, "Date", "Nalla Neram")
+    ),
 
     nalla_neram: addTimeSeparator(
       sectionValue(dailyLines, "Nalla Neram", "Gowri Nalla Neram")
     ),
 
-    gowri_nalla_neram: addTimeSeparator(
+    gowri_nalla_neram: cleanGowriNeram(
       sectionValue(dailyLines, "Gowri Nalla Neram", "Raahu Kaalam")
     ),
 
-    rahu_kaalam: ensureDayPeriod(
+    rahu_kaalam: normalizeDaytimeRange(
       sectionValue(dailyLines, "Raahu Kaalam", "Yemagandam")
     ),
 
-    yamagandam: ensureDayPeriod(
+    yamagandam: normalizeDaytimeRange(
       sectionValue(dailyLines, "Yemagandam", "Kuligai")
     ),
 
-    kuligai: ensureDayPeriod(
+    kuligai: normalizeDaytimeRange(
       sectionValue(dailyLines, "Kuligai", "Soolam")
     ),
 
@@ -380,8 +495,12 @@ async function main() {
     lagnam: sectionValue(dailyLines, "Lagnam", "Sun Rise"),
     sunrise: sectionValue(dailyLines, "Sun Rise", "Sraardha Thithi"),
     sraardha_thithi: sectionValue(dailyLines, "Sraardha Thithi", "Thithi"),
-    thithi: sectionValue(dailyLines, "Thithi", "Star"),
-    star: sectionValue(dailyLines, "Star", "Subakariyam"),
+    thithi: tidyNamedCalendarValue(
+      sectionValue(dailyLines, "Thithi", "Star")
+    ),
+    star: tidyNamedCalendarValue(
+      sectionValue(dailyLines, "Star", "Subakariyam")
+    ),
     subakariyam: tidySubakariyam(
       sectionValue(dailyLines, "Subakariyam", "Tamil Rasi Palan")
     ),
