@@ -402,7 +402,10 @@ function tidyNamedCalendarValue(value) {
 function tidySubakariyam(value) {
   let result = value
     .replace(/^\s*[,./;:-]+\s*/g, "")
-    .replace(/\s*,\s*,\s*/g, ", ")
+    .replace(/\s*,\s*,+\s*/g, ", ")
+    .replace(/,\s*,+/g, ",")
+    .replace(/\s+,/g, ",")
+    .replace(/,\s+/g, ", ")
     .replace(/^\s*(?:AM|PM)\b[\s,;:.-]*/i, "")
     .replace(/[\s,;:.-]*\b(?:AM|PM)\s*$/i, "")
     .replace(/(^|[,;])\s*(?:AM|PM)\s*(?=[,;]|$)/gi, "$1")
@@ -422,6 +425,12 @@ function tidySubakariyam(value) {
   result = result
     .replace(/(?:,\s*|\s+)a favourable day[.!]?$/i, "; generally a favourable day")
     .replace(/Good for:\s*(?:AM|PM)\b[\s,;:.-]*/i, "Good for: ")
+    .replace(/\s*,\s*,+\s*/g, ", ")
+    .replace(/,\s*,+/g, ",")
+    .replace(/\s+,/g, ",")
+    .replace(/,\s+/g, ", ")
+    .replace(/\s+;/g, ";")
+    .replace(/;\s+/g, "; ")
     .replace(/\s+/g, " ")
     .trim();
 
