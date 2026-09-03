@@ -3,71 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=800,height=480,initial-scale=1">
-<title>தமிழ் தினசரி காலண்டர்</title>
+<title>Tamil Daily Calendar</title>
 <style>
-:root{--ink:#111;--muted:#555;--paper:#fff;--soft:#faf8f1}
-*{box-sizing:border-box}
-html,body{margin:0;width:800px;height:480px;overflow:hidden;background:var(--paper);color:var(--ink);font-family:"Noto Sans Tamil", "Nirmala UI", Arial, Helvetica, sans-serif}
-.page{width:800px;height:480px;padding:8px 12px;display:flex;flex-direction:column}
-.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid var(--ink);padding-bottom:5px;margin-bottom:7px}
-.title{font-size:22px;font-weight:700;line-height:1.05}
-.subtitle{margin-top:2px;font-size:10px;line-height:1.1;color:var(--muted)}
-.date{max-width:390px;text-align:right;font-size:16px;font-weight:700;line-height:1.08}
-.tamil-date{margin-top:2px;font-size:14px;font-weight:600;line-height:1.1}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
-.card{min-height:53px;padding:5px 8px;border:1.5px solid var(--ink);border-radius:7px;background:var(--soft)}
-.label{font-size:12px;font-weight:700;line-height:1.05}
-.help{margin-top:1px;font-size:8.5px;color:var(--muted);line-height:1.05}
-.value{margin-top:2px;font-size:11.5px;font-weight:600;line-height:1.12}
-.small{font-size:10.5px}
-.note{margin-top:5px;padding:5px 8px;border:1px solid #777;border-radius:6px;background:var(--soft)}
-.note-title{font-size:12px;font-weight:700;line-height:1.05}
-.note-help{margin-top:1px;font-size:8.5px;color:var(--muted);line-height:1.05}
-.note-value{margin-top:2px;font-size:10.5px;line-height:1.12;font-weight:500;word-break:break-word}
-.today-note .note-value{font-size:10px;line-height:1.08}
-.footer{margin-top:auto;padding-top:3px;border-top:1px solid #777;font-size:8.5px;color:var(--muted);line-height:1.05;display:flex;justify-content:space-between;gap:8px}
+html,body{
+  margin:0;
+  padding:0;
+  width:800px;
+  height:480px;
+  overflow:hidden;
+  background:white;
+}
+img{
+  display:block;
+  width:800px;
+  height:480px;
+  object-fit:cover;
+}
 </style>
 </head>
 <body>
-<div class="page">
-  <div class="header">
-    <div>
-      <div class="title">தமிழ் தினசரி காலண்டர்</div>
-      <div class="subtitle">E1002 நிலையான தினசரி காட்சி</div>
-    </div>
-    <div class="date">
-      <div>03 September 2026 Thursday</div>
-      <div class="tamil-date">17 - ஆவணி - பராபவ</div>
-    </div>
-  </div>
-
-  <div class="grid">
-    <div class="card"><div class="label">நல்ல நேரம்</div><div class="help">சுப காரியங்களுக்கு ஏற்ற நேரம்</div><div class="value">10:45 - 11:45 கா / AM / 12:15 - 01:15 மா / PM</div></div>
-    <div class="card"><div class="label">கௌரி நல்ல நேரம்</div><div class="help">முக்கிய செயல்களுக்கு ஏற்ற நேரம்</div><div class="value">00:00 - 00:00 கா / AM / 06:30 - 07:30 மா / PM</div></div>
-    <div class="card"><div class="label">இராகு காலம்</div><div class="help">புதிய முக்கிய வேலை தொடங்க தவிர்க்கும் நேரம்</div><div class="value">01.30 - 03.00</div></div>
-    <div class="card"><div class="label">எமகண்டம்</div><div class="help">புதிய முக்கிய வேலை தொடங்க தவிர்க்கும் நேரம்</div><div class="value">06.00 - 07.30</div></div>
-    <div class="card"><div class="label">குளிகை</div><div class="help">நீடித்த விளைவுகளுடன் தொடர்புடைய நேரம்</div><div class="value">09.00 - 10.30</div></div>
-    <div class="card"><div class="label">சூரிய உதயம்</div><div class="help">இந்திய நேர அடிப்படையிலான குறிப்பு</div><div class="value">06:04 கா / AM</div></div>
-    <div class="card"><div class="label">திதி</div><div class="help">சந்திர நாள்காட்டி நாள்</div><div class="value small">இன்று அதிகாலை 04:12 AM வரை சஷ்டி பின்பு சப்தமி</div></div>
-    <div class="card"><div class="label">நட்சத்திரம்</div><div class="help">சந்திரன் இருக்கும் நட்சத்திரம்</div><div class="value small">இன்று அதிகாலை 02:20 AM வரை பரணி பின்பு கார்த்திகை</div></div>
-  </div>
-
-  <div class="note">
-    <div class="note-title">சூலம் / பரிகாரம்</div>
-    <div class="note-help">பயண திசை குறிப்பு / பரிகாரம்</div>
-    <div class="note-value">தெற்கு · தைலம்</div>
-  </div>
-
-  <div class="note today-note">
-    <div class="note-title">இன்றைய குறிப்பு</div>
-    <div class="note-help">பாரம்பரியமாக நல்லதாகக் கருதப்படும் செயல்கள்</div>
-    <div class="note-value">மேலோரைக் காண, கடன் தீர்க்க, வஸ்த்ரம் வாங்க சிறந்த நாள்</div>
-  </div>
-
-  <div class="footer">
-    <div>புதுப்பிக்கப்பட்டது: 03 Sept 2026, 08:11 pm SGT</div>
-    <div>மூலம்: TamilDailyCalendar.com · GitHub Action மூலம் நிலையான HTML</div>
-  </div>
-</div>
+<img src="tamil-calendar.png" alt="Tamil Daily Calendar">
 </body>
 </html>
