@@ -1,0 +1,184 @@
+import fs from "node:fs/promises";
+
+function escapeHtml(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatSgtDateTime(isoText) {
+  if (!isoText) return "—";
+  const date = new Date(isoText);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return new Intl.DateTimeFormat("en-SG", {
+    timeZone: "Asia/Singapore",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  }).format(date) + " SGT";
+}
+
+const data = JSON.parse(
+  await fs.readFile("data/calendar.json", "utf8")
+);
+
+const v = key => escapeHtml(data[key] || "Not available");
+
+const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800,height=480,initial-scale=1">
+<title>English Tamil Calendar</title>
+<style>
+html,body{
+  margin:0;
+  width:800px;
+  height:480px;
+  overflow:hidden;
+  background:#f7f4ea;
+  color:#111;
+  font-family:Arial,Helvetica,sans-serif;
+}
+*{box-sizing:border-box}
+.page{width:800px;height:480px;padding:8px 12px}
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  border-bottom:3px solid #222;
+  padding-bottom:5px;
+  margin-bottom:8px;
+}
+.title{font-size:23px;font-weight:700;line-height:1.05}
+.subtitle{margin-top:1px;font-size:12px;line-height:1.05}
+.date{
+  max-width:360px;
+  font-size:16px;
+  font-weight:700;
+  text-align:right;
+  line-height:1.05;
+}
+.tamil-date{
+  margin-top:2px;
+  font-size:13px;
+  font-weight:600;
+  line-height:1.05;
+}
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px 12px;
+}
+.card{
+  min-height:52px;
+  padding:5px 8px;
+  border:1.5px solid #222;
+  border-radius:8px;
+  background:#fffdf6;
+}
+.label{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.15px;
+  text-transform:uppercase;
+  line-height:1.05;
+}
+.help{
+  margin-top:1px;
+  font-size:9px;
+  font-weight:400;
+  color:#444;
+  line-height:1.05;
+}
+.value{
+  margin-top:2px;
+  font-size:12px;
+  font-weight:600;
+  line-height:1.1;
+}
+.small{font-size:11px}
+.note{
+  margin-top:5px;
+  padding:5px 8px;
+  border:1px solid #777;
+  border-radius:6px;
+  background:#fffdf6;
+}
+.note-title{font-size:11px;font-weight:700;line-height:1.05}
+.note-help{margin-top:1px;font-size:9px;color:#444;line-height:1.05}
+.note-value{
+  margin-top:2px;
+  font-size:11px;
+  line-height:1.1;
+  font-weight:500;
+  word-break:break-word;
+}
+.today-note .note-value{font-size:10px;line-height:1.05}
+.footer{
+  margin-top:4px;
+  padding-top:3px;
+  border-top:1px solid #777;
+  font-size:9px;
+  color:#444;
+  line-height:1.05;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <div class="title">Tamil Daily Calendar</div>
+      <div class="subtitle">English reference display · static E1002 page</div>
+    </div>
+    <div class="date">
+      <div>${v("date")}</div>
+      <div class="tamil-date">${v("tamil_date")}</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><div class="label">Nalla Neram</div><div class="help">(auspicious time)</div><div class="value">${v("nalla_neram")}</div></div>
+    <div class="card"><div class="label">Gowri Nalla Neram</div><div class="help">(auspicious time for key activities)</div><div class="value">${v("gowri_nalla_neram")}</div></div>
+    <div class="card"><div class="label">Rahu Kaalam</div><div class="help">(traditionally avoid starting important work)</div><div class="value">${v("rahu_kaalam")}</div></div>
+    <div class="card"><div class="label">Yamagandam</div><div class="help">(traditionally avoid starting important work)</div><div class="value">${v("yamagandam")}</div></div>
+    <div class="card"><div class="label">Kuligai</div><div class="help">(traditionally linked to lasting outcomes)</div><div class="value">${v("kuligai")}</div></div>
+    <div class="card"><div class="label">Sunrise</div><div class="help">(India-based source reference)</div><div class="value">${v("sunrise")}</div></div>
+    <div class="card"><div class="label">Tithi</div><div class="help">(lunar day / Moon phase)</div><div class="value small">${v("thithi")}</div></div>
+    <div class="card"><div class="label">Nakshatra / Star</div><div class="help">(Moon's constellation)</div><div class="value small">${v("star")}</div></div>
+  </div>
+
+  <div class="note">
+    <div class="note-title">Soolam / Remedy</div>
+    <div class="note-help">(traditionally avoided travel direction / suggested remedy)</div>
+    <div class="note-value">${v("soolam")} · ${v("parigaram")}</div>
+  </div>
+
+  <div class="note today-note">
+    <div class="note-title">Today's Note</div>
+    <div class="note-help">(traditionally favourable activities)</div>
+    <div class="note-value">${v("subakariyam")}</div>
+  </div>
+
+  <div class="footer">
+    <div>Updated: ${escapeHtml(formatSgtDateTime(data.updated_at))}</div>
+    <div>Static HTML generated by GitHub Actions</div>
+  </div>
+</div>
+</body>
+</html>
+`;
+
+await fs.writeFile("English.html", html, "utf8");
+console.log("Generated fully static English.html");
