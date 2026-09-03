@@ -1,4 +1,4 @@
-name: Update English Tamil Calendar
+name: Update Static Tamil Calendar Pages
 
 on:
   workflow_dispatch:
@@ -21,13 +21,30 @@ jobs:
         with:
           node-version: 20
 
-      - name: Fetch and translate calendar
+      - name: Fetch and translate English calendar data
         run: node scripts/update-calendar.mjs
 
-      - name: Save updated calendar data
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Capture Tamil calendar crop and generate static Tamil page
+        run: node scripts/capture-tamil-page.mjs
+
+      - name: Generate fully static English page
+        run: node scripts/render-english-static.mjs
+
+      - name: Save updated static calendar pages
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/calendar.json
-          git diff --cached --quiet || git commit -m "Update Tamil calendar data"
+
+          git add \
+            data/calendar.json \
+            tamil-calendar.png \
+            index.html \
+            English.html
+
+          git diff --cached --quiet || git commit -m "Update static Tamil calendar pages"
           git push
